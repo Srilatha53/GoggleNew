@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow xmlns="http://www.springframework.org/schema/webflow"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.springframework.org/schema/webflow 
+      http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
+      
+      <var name="order" class="com.niit.model.UserOrder"/>
+      
+      <action-state id="validateCart">
+      <evaluate expression="cartDaoImpl.validate(requestParameters.cartId)" result="order.cart"></evaluate>
+      <transition to="invalidCartWarning" on-exception="java.io.IOException"></transition>
+      <transition to="collectUserInfo"></transition>
+      </action-state>
+      
+     
+      
+      <view-state id="collectUserInfo" view="collectUserInfo.jsp" model="order">
+      <transition on="collectedUserInfo" to="collectShippingAddr"></transition>
+      </view-state>
+     
+      <view-state id="collectShippingAddr" view="collectShippingAddr.jsp" model="order">
+ 	  <transition on="backTocollectUserInfo" to="collectUserInfo"></transition>    
+ 	  <transition on="collectedShippingAddr" to="confirmOrder"></transition> 
+      </view-state>
+      
+      <view-state id="confirmOrder" view="confirmOrder.jsp" model="order">
+      <transition on="backTocollectShippingAddr" to="collectShippingAddr"></transition>
+      <transition on="confirmedOrder" to="processOrder"></transition>
+      </view-state>
+      
+      <action-state id="processOrder">
+      <evaluate expression="userOrderDaoImpl.addUserOrder(order.cart)"></evaluate>
+      <transition to="clearCart"></transition>
+      </action-state>
+      
+      
+      <action-state id="clearCart">
+      <evaluate expression="cartItemDaoImpl.removeItemsinCart(order.cart)"></evaluate>
+      <transition to="thankCustomer"></transition>
+      </action-state>
+      
+      <view-state id="thankCustomer">
+      <transition to="endState" ></transition>
+      </view-state>
+      
+      <end-state id="endState"></end-state>
+      
+      
+      <view-state id="invalidCartWarning">
+      <transition to="endState"></transition>
+      </view-state>
+      
+      
+      <!-- <action-state id="cancelPurchase">
+      <evaluate expression="CartItemDaoImpl.removeAllCartItems(order.cart)"></evaluate>
+      <transition on="cancelCheckOut"></transition>
+      </action-state> -->
+      
+      
+      <end-state id="cancelCheckOut" view="cancelCheckOut.jsp"></end-state>
+      
+      <global-transitions>
+      <transition on="cancel" to="cancelCheckOut"></transition>
+      </global-transitions>
+      
+</flow>
+      
